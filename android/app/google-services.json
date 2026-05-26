@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "902353413586",
+    "project_id": "games-review-cb093",
+    "storage_bucket": "games-review-cb093.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902353413586:android:7a834ec31ed99a1dce140b",
+        "android_client_info": {
+          "package_name": "com.example.proyek_pab2_kelompok_7"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD67LLkb-O4oUs7UlOsVkVRzrcUKCUrld8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

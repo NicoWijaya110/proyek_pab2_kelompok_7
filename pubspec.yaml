@@ -1,0 +1,56 @@
+name: proyek_pab2_kelompok_7
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.3
+  cloud_firestore: ^5.6.6
+  firebase_storage: ^12.4.5
+
+  # Provider
+  provider: ^6.1.5
+
+  # UI & Utilities
+  shared_preferences: ^2.5.3
+  image_picker: ^1.1.2
+  shimmer: ^3.0.0
+  timeago: ^3.7.0
+  geolocator: ^13.0.3
+  geocoding: ^3.0.0
+  url_launcher: ^6.3.1
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+  fonts:
+    - family: Orbitron
+      fonts:
+        - asset: assets/fonts/Orbitron-Regular.ttf
+        - asset: assets/fonts/Orbitron-Bold.ttf
+          weight: 700
+    - family: Exo2
+      fonts:
+        - asset: assets/fonts/Exo2-Regular.ttf
+        - asset: assets/fonts/Exo2-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Exo2-Bold.ttf
+          weight: 700
