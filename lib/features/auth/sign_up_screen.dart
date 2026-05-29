@@ -77,7 +77,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                     Text('Bergabunglah dengan komunitas GamesRR',
-                        style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 13)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 13)),
                     const SizedBox(height: 36),
 
                     if (_errorMsg != null)
@@ -85,7 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         padding: const EdgeInsets.all(12),
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade900.withOpacity(0.4),
+                          color: Colors.red.shade900.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.red.shade700),
                         ),
@@ -164,7 +164,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text('Sudah punya akun? ',
-                            style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
                         GestureDetector(
                           onTap: () =>
                               Navigator.pushReplacementNamed(context, '/signin'),

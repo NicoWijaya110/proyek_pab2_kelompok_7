@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
                       border: Border.all(color: AppColors.primary, width: 2.5),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: AppColors.primary.withValues(alpha: 0.4),
                           blurRadius: 30,
                           spreadRadius: 8,
                         )
@@ -105,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
                     style: TextStyle(
                       fontFamily: 'Exo2',
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       letterSpacing: 3,
                     ),
                   ),

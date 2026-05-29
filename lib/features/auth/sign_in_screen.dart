@@ -76,7 +76,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 6),
                     Text(
                       'Masuk ke akunmu',
-                      style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 40),
 
@@ -86,7 +86,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         padding: const EdgeInsets.all(12),
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade900.withOpacity(0.4),
+                          color: Colors.red.shade900.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.red.shade700),
                         ),
@@ -159,7 +159,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text('Belum punya akun? ',
-                            style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
                         GestureDetector(
                           onTap: () =>
                               Navigator.pushReplacementNamed(context, '/signup'),

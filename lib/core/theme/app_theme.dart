@@ -12,6 +12,7 @@ class AppColors {
   static const Color darkBg = Color(0xFF0A0A0F);
   static const Color darkSurface = Color(0xFF12121A);
   static const Color darkCard = Color(0xFF1A1A26);
+  static const Color darkBorder = Color(0xFF2A2A38);
 
   // Light mode
   static const Color lightBg = Color(0xFFF5F5F5);
@@ -133,7 +134,7 @@ class AppTheme {
       // Navigation bar
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
-        indicatorColor: AppColors.primary.withOpacity(0.2),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.2),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: AppColors.primary);
@@ -151,7 +152,7 @@ class AppTheme {
       // Chip
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.darkCard,
-        selectedColor: AppColors.primary.withOpacity(0.2),
+        selectedColor: AppColors.primary.withValues(alpha: 0.2),
         labelStyle: const TextStyle(color: AppColors.textPrimary, fontFamily: 'Exo2'),
         side: const BorderSide(color: Colors.transparent),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
