@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,7 +23,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
   final _nameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
-  File? _newPhotoFile;
+  Uint8List? _newPhotoBytes;
+  bool _pickingPhoto = false;
   bool _saving = false;
 
   @override
@@ -38,15 +40,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isEditing = true);
   }
 
-  Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final xFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 600,
+  Future<void> _showPhotoSourceDialog() async {
+    final canUseCamera = !kIsWeb;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeri'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickPhoto(ImageSource.gallery);
+                },
+              ),
+              if (canUseCamera)
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Kamera'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickPhoto(ImageSource.camera);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: const Text('Batal'),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (xFile != null) {
-      setState(() => _newPhotoFile = File(xFile.path));
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    setState(() => _pickingPhoto = true);
+    try {
+      final picker = ImagePicker();
+      final xFile = await picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 600,
+      );
+      if (xFile != null) {
+        final bytes = await xFile.readAsBytes();
+        setState(() => _newPhotoBytes = bytes);
+      }
+    } finally {
+      if (mounted) setState(() => _pickingPhoto = false);
     }
   }
 
@@ -63,9 +112,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       String? photoUrl;
-      if (_newPhotoFile != null) {
+      if (_newPhotoBytes != null) {
         photoUrl = await StorageService()
-            .uploadProfilePhoto(_newPhotoFile!, auth.user!.uid);
+        .uploadProfilePhoto(bytes: _newPhotoBytes!, userId: auth.user!.uid);
       }
 
       final err = await auth.updateProfile(
@@ -82,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else {
         setState(() {
           _isEditing = false;
-          _newPhotoFile = null;
+          _newPhotoBytes = null;
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -114,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Icon(Icons.person_outline_rounded,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
               const SizedBox(height: 16),
               const Text('Masuk untuk melihat profilmu',
                   style: TextStyle(color: Colors.white54)),
@@ -153,7 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Switch(
                   value: isDark,
                   onChanged: (_) => themeProvider.toggleTheme(),
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ],
@@ -216,22 +265,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: AppColors.darkBorder,
-                        backgroundImage: _newPhotoFile != null
-                            ? FileImage(_newPhotoFile!) as ImageProvider
-                            : (photoUrl.isNotEmpty
-                                ? NetworkImage(photoUrl)
-                                : null),
-                        child: (photoUrl.isEmpty && _newPhotoFile == null)
+                        backgroundImage: _newPhotoBytes != null
+                          ? MemoryImage(_newPhotoBytes!) as ImageProvider
+                          : (photoUrl.isNotEmpty
+                            ? NetworkImage(photoUrl)
+                            : null),
+                          child: (photoUrl.isEmpty && _newPhotoBytes == null)
                             ? const Icon(Icons.person_rounded,
                                 size: 48, color: Colors.white38)
                             : null,
                       ),
+                      if (_pickingPhoto)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.45),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
                       if (_isEditing)
                         Positioned(
                           bottom: 0,
                           right: 0,
                           child: GestureDetector(
-                            onTap: _pickPhoto,
+                            onTap: _showPhotoSourceDialog,
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: const BoxDecoration(
@@ -312,9 +375,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         TextButton(
                           onPressed: () => setState(() {
-                            _isEditing = false;
-                            _newPhotoFile = null;
-                          }),
+                              _isEditing = false;
+                              _newPhotoBytes = null;
+                            }),
                           child: const Text('Batal'),
                         ),
                         const SizedBox(width: 12),
@@ -372,7 +435,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Text(
                         'Kamu belum pernah memposting review.\nMulai sekarang!',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withOpacity(0.35)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
                       ),
                     ),
                   );
@@ -406,9 +469,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             CachedNetworkImage(
                               imageUrl: r.imageUrl,
                               fit: BoxFit.cover,
-                              placeholder: (_, __) =>
+                              placeholder: (_, _) =>
                                   Container(color: AppColors.darkBorder),
-                              errorWidget: (_, __, ___) => Container(
+                              errorWidget: (_, _, _) => Container(
                                 color: AppColors.darkBorder,
                                 child: const Icon(Icons.broken_image_outlined,
                                     color: Colors.white24),
@@ -420,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               right: 0,
                               child: Container(
                                 padding: const EdgeInsets.all(5),
-                                color: Colors.black.withOpacity(0.65),
+                                color: Colors.black.withValues(alpha: 0.65),
                                 child: Text(
                                   r.title,
                                   style: const TextStyle(

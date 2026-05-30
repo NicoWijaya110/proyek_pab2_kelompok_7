@@ -6,7 +6,6 @@ import '../../core/theme/app_theme.dart';
 import '../../models/game_review.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/favorite_service.dart';
-import '../../services/review_service.dart';
 import '../detail/detail_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
@@ -26,7 +25,7 @@ class FavoritesScreen extends StatelessWidget {
             children: [
               Icon(Icons.favorite_border_rounded,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
               const SizedBox(height: 16),
               const Text('Masuk untuk melihat favoritmu',
                   style: TextStyle(color: Colors.white54)),
@@ -64,13 +63,13 @@ class FavoritesScreen extends StatelessWidget {
                   Icon(
                     Icons.favorite_border_rounded,
                     size: 72,
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                   ),
                   const SizedBox(height: 14),
                   Text(
                     'Belum ada favorit\nTandai review yang kamu suka!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white.withOpacity(0.35)),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
                   ),
                 ],
               ),
@@ -93,7 +92,7 @@ class FavoritesScreen extends StatelessWidget {
               return ListView.separated(
                 padding: const EdgeInsets.all(14),
                 itemCount: reviews.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (ctx, i) =>
                     _FavoriteCard(review: reviews[i], userId: auth.user!.uid),
               );
@@ -129,9 +128,9 @@ class _FavoriteCard extends StatelessWidget {
                 width: 100,
                 height: 130,
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     Container(color: AppColors.darkBorder),
-                errorWidget: (_, __, ___) =>
+                errorWidget: (_, _, _) =>
                     Container(color: AppColors.darkBorder,
                         child: const Icon(Icons.broken_image_outlined,
                             color: Colors.white24)),
@@ -150,7 +149,7 @@ class _FavoriteCard extends StatelessWidget {
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.genreColor(review.genre)
-                                .withOpacity(0.2),
+                                .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(

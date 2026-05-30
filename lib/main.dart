@@ -11,10 +11,11 @@ import 'features/favorites/favorites_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/sign_up_screen.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(
     MultiProvider(
       providers: [
@@ -62,36 +63,29 @@ class _MainShellState extends State<MainShell> {
   final _screens = const [
     HomeScreen(),
     FavoritesScreen(),
+    PostScreen(),
     ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.watch<ThemeProvider>().isDark;
-    final primaryColor = isDark
-        ? AppColors.primary
-        : AppColors.primaryDark;
+    
 
     return Scaffold(
       body: IndexedStack(index: _index, children: _screens),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          final auth = context.read<AuthProvider>();
-          if (!auth.isLoggedIn) {
-            Navigator.pushNamed(context, '/signin');
-            return;
-          }
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const PostScreen()));
-        },
-        icon: const Icon(Icons.rate_review_rounded),
-        label: const Text('Review'),
-        backgroundColor: primaryColor,
-        foregroundColor: isDark ? Colors.black : Colors.white,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: (i) {
+          if (i == 2) {
+            // Review button
+            final auth = context.read<AuthProvider>();
+            if (!auth.isLoggedIn) {
+              Navigator.pushNamed(context, '/signin');
+              return;
+            }
+          }
+          setState(() => _index = i);
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -102,6 +96,11 @@ class _MainShellState extends State<MainShell> {
             icon: Icon(Icons.favorite_outline_rounded),
             selectedIcon: Icon(Icons.favorite_rounded),
             label: 'Favorit',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.rate_review_rounded),
+            selectedIcon: Icon(Icons.rate_review_rounded),
+            label: 'Review',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

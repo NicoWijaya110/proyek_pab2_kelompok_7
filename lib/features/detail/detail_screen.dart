@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/game_review.dart';
 import '../../models/comment.dart';
@@ -25,8 +27,8 @@ class _DetailScreenState extends State<DetailScreen> {
   final _replyCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
 
-  String? _replyingToId;       // ID komentar yang sedang dibalas
-  String? _replyingToName;     // Nama user yang dibalas
+  String? _replyingToId; // ID komentar yang sedang dibalas
+  String? _replyingToName; // Nama user yang dibalas
 
   @override
   void dispose() {
@@ -42,7 +44,8 @@ class _DetailScreenState extends State<DetailScreen> {
     final lat = widget.review.latitude!;
     final lng = widget.review.longitude!;
     final uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -93,11 +96,13 @@ class _DetailScreenState extends State<DetailScreen> {
         content: const Text('Komentar ini akan dihapus permanen.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Batal')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Hapus', style: TextStyle(color: Colors.red))),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -125,12 +130,15 @@ class _DetailScreenState extends State<DetailScreen> {
               background: CachedNetworkImage(
                 imageUrl: widget.review.imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                    Container(color: AppColors.darkCard),
-                errorWidget: (_, __, ___) =>
-                    Container(color: AppColors.darkCard,
-                        child: const Icon(Icons.broken_image_outlined,
-                            color: Colors.white24, size: 48)),
+                placeholder: (_, _) => Container(color: AppColors.darkCard),
+                errorWidget: (_, _, _) => Container(
+                  color: AppColors.darkCard,
+                  child: const Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white24,
+                    size: 48,
+                  ),
+                ),
               ),
             ),
             actions: [
@@ -138,7 +146,9 @@ class _DetailScreenState extends State<DetailScreen> {
               if (auth.isLoggedIn)
                 StreamBuilder<bool>(
                   stream: _favoriteService.isFavorite(
-                      auth.user!.uid, widget.review.id),
+                    auth.user!.uid,
+                    widget.review.id,
+                  ),
                   builder: (ctx, snap) {
                     final isFav = snap.data ?? false;
                     return IconButton(
@@ -155,12 +165,16 @@ class _DetailScreenState extends State<DetailScreen> {
                           isFav,
                         );
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(isFav
-                                ? 'Dihapus dari Favorit'
-                                : 'Ditambahkan ke Favorit ❤️'),
-                            duration: const Duration(seconds: 1),
-                          ));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFav
+                                    ? 'Dihapus dari Favorit'
+                                    : 'Ditambahkan ke Favorit ❤️',
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
                         }
                       },
                     );
@@ -180,7 +194,9 @@ class _DetailScreenState extends State<DetailScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.genreColor(widget.review.genre),
                           borderRadius: BorderRadius.circular(8),
@@ -195,13 +211,18 @@ class _DetailScreenState extends State<DetailScreen> {
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.access_time_rounded,
-                          size: 13, color: Colors.white38),
+                      const Icon(
+                        Icons.access_time_rounded,
+                        size: 13,
+                        color: Colors.white38,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         timeago.format(widget.review.createdAt, locale: 'id'),
                         style: const TextStyle(
-                            fontSize: 12, color: Colors.white38),
+                          fontSize: 12,
+                          color: Colors.white38,
+                        ),
                       ),
                     ],
                   ),
@@ -226,13 +247,15 @@ class _DetailScreenState extends State<DetailScreen> {
                       CircleAvatar(
                         radius: 14,
                         backgroundColor: AppColors.darkBorder,
-                        backgroundImage:
-                            widget.review.userPhotoUrl.isNotEmpty
-                                ? NetworkImage(widget.review.userPhotoUrl)
-                                : null,
+                        backgroundImage: widget.review.userPhotoUrl.isNotEmpty
+                            ? NetworkImage(widget.review.userPhotoUrl)
+                            : null,
                         child: widget.review.userPhotoUrl.isEmpty
-                            ? const Icon(Icons.person_rounded,
-                                size: 14, color: Colors.white38)
+                            ? const Icon(
+                                Icons.person_rounded,
+                                size: 14,
+                                color: Colors.white38,
+                              )
                             : null,
                       ),
                       const SizedBox(width: 8),
@@ -300,36 +323,80 @@ class _DetailScreenState extends State<DetailScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.darkBorder),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Icon(Icons.location_on_rounded,
-                                color: Colors.redAccent),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.review.locationName ??
-                                        'Lokasi tercatat',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on_rounded,
+                                  color: Colors.redAccent,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.review.locationName ??
+                                            'Lokasi tercatat',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${widget.review.latitude!.toStringAsFixed(6)}, '
+                                        '${widget.review.longitude!.toStringAsFixed(6)}',
+                                        style: const TextStyle(
+                                          color: Colors.white38,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    '${widget.review.latitude!.toStringAsFixed(6)}, '
-                                    '${widget.review.longitude!.toStringAsFixed(6)}',
-                                    style: const TextStyle(
-                                      color: Colors.white38,
-                                      fontSize: 12,
+                                ),
+                                const Icon(
+                                  Icons.open_in_new_rounded,
+                                  color: AppColors.primary,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: GestureDetector(
+                                onTap: _openMaps,
+                                child: SizedBox(
+                                  height: 180,
+                                  child: FlutterMap(
+                                    options: MapOptions(
+                                      center: LatLng(widget.review.latitude!, widget.review.longitude!),
+                                      zoom: 15,
+                                      interactiveFlags: InteractiveFlag.all,
                                     ),
+                                    children: [
+                                      TileLayer(
+                                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        subdomains: const ['a', 'b', 'c'],
+                                      ),
+                                      MarkerLayer(
+                                        markers: [
+                                          Marker(
+                                            point: LatLng(widget.review.latitude!, widget.review.longitude!),
+                                            width: 36,
+                                            height: 36,
+                                            builder: (ctx) => const Icon(Icons.location_on_rounded, color: Colors.redAccent, size: 36),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
-                            const Icon(Icons.open_in_new_rounded,
-                                color: AppColors.primary, size: 18),
                           ],
                         ),
                       ),
@@ -354,8 +421,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
                   // Daftar Komentar
                   StreamBuilder<List<Comment>>(
-                    stream:
-                        _commentService.streamComments(widget.review.id),
+                    stream: _commentService.streamComments(widget.review.id),
                     builder: (ctx, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -363,21 +429,38 @@ class _DetailScreenState extends State<DetailScreen> {
                       final comments = snap.data ?? [];
 
                       // Pisahkan komentar utama dan balasan
-                      final topLevel =
-                          comments.where((c) => c.parentId == null).toList();
-                      final replies =
-                          comments.where((c) => c.parentId != null).toList();
+                      final topLevel = comments
+                          .where((c) => c.parentId == null)
+                          .toList();
+                      final replies = comments
+                          .where((c) => c.parentId != null)
+                          .toList();
 
                       if (topLevel.isEmpty) {
                         return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              'Belum ada komentar.\nJadi yang pertama!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: Colors.white.withOpacity(0.35)),
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Text(
+                                  'Belum ada komentar.\nJadi yang pertama!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: _openMaps,
+                                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                                  label: const Text('Buka di Google Maps'),
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }
@@ -398,13 +481,13 @@ class _DetailScreenState extends State<DetailScreen> {
                               });
                               // Scroll ke bawah ke text field
                               Future.delayed(
-                                  const Duration(milliseconds: 300),
-                                  () => _scrollCtrl.animateTo(
-                                        _scrollCtrl.position.maxScrollExtent,
-                                        duration:
-                                            const Duration(milliseconds: 400),
-                                        curve: Curves.easeOut,
-                                      ));
+                                const Duration(milliseconds: 300),
+                                () => _scrollCtrl.animateTo(
+                                  _scrollCtrl.position.maxScrollExtent,
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeOut,
+                                ),
+                              );
                             },
                             onDelete: () => _deleteComment(comment.id),
                           );
@@ -438,24 +521,33 @@ class _DetailScreenState extends State<DetailScreen> {
             // Indikator sedang membalas
             if (_replyingToId != null)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.reply_rounded,
-                        size: 16, color: AppColors.primary),
+                    const Icon(
+                      Icons.reply_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Membalas $_replyingToName',
                         style: const TextStyle(
-                            color: AppColors.primary, fontSize: 12),
+                          color: AppColors.primary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                     GestureDetector(
@@ -463,8 +555,11 @@ class _DetailScreenState extends State<DetailScreen> {
                         _replyingToId = null;
                         _replyingToName = null;
                       }),
-                      child: const Icon(Icons.close_rounded,
-                          size: 16, color: AppColors.primary),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -473,8 +568,9 @@ class _DetailScreenState extends State<DetailScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller:
-                        _replyingToId != null ? _replyCtrl : _commentCtrl,
+                    controller: _replyingToId != null
+                        ? _replyCtrl
+                        : _commentCtrl,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: _replyingToId != null
@@ -482,7 +578,9 @@ class _DetailScreenState extends State<DetailScreen> {
                           : 'Tulis komentar...',
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ),
@@ -492,7 +590,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   icon: const Icon(Icons.send_rounded),
                   color: AppColors.primary,
                   style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primary.withOpacity(0.15),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                   ),
                 ),
               ],
@@ -542,13 +640,15 @@ class _CommentTileState extends State<_CommentTile> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: AppColors.darkBorder,
-                backgroundImage:
-                    widget.comment.userPhotoUrl.isNotEmpty
-                        ? NetworkImage(widget.comment.userPhotoUrl)
-                        : null,
+                backgroundImage: widget.comment.userPhotoUrl.isNotEmpty
+                    ? NetworkImage(widget.comment.userPhotoUrl)
+                    : null,
                 child: widget.comment.userPhotoUrl.isEmpty
-                    ? const Icon(Icons.person_rounded,
-                        size: 14, color: Colors.white38)
+                    ? const Icon(
+                        Icons.person_rounded,
+                        size: 14,
+                        color: Colors.white38,
+                      )
                     : null,
               ),
               const SizedBox(width: 10),
@@ -575,17 +675,26 @@ class _CommentTileState extends State<_CommentTile> {
                           ),
                           const Spacer(),
                           Text(
-                            timeago.format(widget.comment.createdAt,
-                                locale: 'id'),
+                            timeago.format(
+                              widget.comment.createdAt,
+                              locale: 'id',
+                            ),
                             style: const TextStyle(
-                                fontSize: 11, color: Colors.white38),
+                              fontSize: 11,
+                              color: Colors.white38,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(widget.comment.text,
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13, height: 1.5)),
+                      Text(
+                        widget.comment.text,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -634,8 +743,7 @@ class _CommentTileState extends State<_CommentTile> {
                 children: [
                   // Toggle tampil/sembunyikan balasan
                   GestureDetector(
-                    onTap: () =>
-                        setState(() => _showReplies = !_showReplies),
+                    onTap: () => setState(() => _showReplies = !_showReplies),
                     child: Row(
                       children: [
                         Icon(
@@ -659,87 +767,96 @@ class _CommentTileState extends State<_CommentTile> {
                     ),
                   ),
                   if (_showReplies)
-                    ...widget.replies.map((reply) => Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CircleAvatar(
-                                radius: 13,
-                                backgroundColor: AppColors.darkBorder,
-                                backgroundImage: reply.userPhotoUrl.isNotEmpty
-                                    ? NetworkImage(reply.userPhotoUrl)
-                                    : null,
-                                child: reply.userPhotoUrl.isEmpty
-                                    ? const Icon(Icons.person_rounded,
-                                        size: 12, color: Colors.white38)
-                                    : null,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.darkCard,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: AppColors.darkBorder),
+                    ...widget.replies.map(
+                      (reply) => Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 13,
+                              backgroundColor: AppColors.darkBorder,
+                              backgroundImage: reply.userPhotoUrl.isNotEmpty
+                                  ? NetworkImage(reply.userPhotoUrl)
+                                  : null,
+                              child: reply.userPhotoUrl.isEmpty
+                                  ? const Icon(
+                                      Icons.person_rounded,
+                                      size: 12,
+                                      color: Colors.white38,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.darkCard,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: AppColors.darkBorder,
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            reply.userName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Text(
-                                            timeago.format(reply.createdAt,
-                                                locale: 'id'),
-                                            style: const TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.white38),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        reply.text,
-                                        style: const TextStyle(
-                                            color: Colors.white70,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          reply.userName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
                                             fontSize: 12,
-                                            height: 1.4),
-                                      ),
-                                      // Hapus balasan (hanya pemilik)
-                                      if (reply.userId ==
-                                          widget.currentUserId) ...[
-                                        const SizedBox(height: 6),
-                                        GestureDetector(
-                                          onTap: widget.onDelete,
-                                          child: const Text(
-                                            'Hapus',
-                                            style: TextStyle(
-                                              color: Colors.redAccent,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          timeago.format(
+                                            reply.createdAt,
+                                            locale: 'id',
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.white38,
                                           ),
                                         ),
                                       ],
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      reply.text,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    // Hapus balasan (hanya pemilik)
+                                    if (reply.userId ==
+                                        widget.currentUserId) ...[
+                                      const SizedBox(height: 6),
+                                      GestureDetector(
+                                        onTap: widget.onDelete,
+                                        child: const Text(
+                                          'Hapus',
+                                          style: TextStyle(
+                                            color: Colors.redAccent,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ],
-                                  ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        )),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

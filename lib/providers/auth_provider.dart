@@ -95,8 +95,16 @@ class AuthProvider extends ChangeNotifier {
         data['photoUrl'] = photoUrl;
         await _user!.updatePhotoURL(photoUrl);
       }
+      // persist to Firestore
       await _db.collection('users').doc(_user!.uid).update(data);
+
+      // reload the Firebase User to pick up updated displayName/photoURL
+      await _user!.reload();
+      _user = _auth.currentUser;
+
+      // refresh local profile and notify listeners
       await _fetchProfile(_user!.uid);
+      notifyListeners();
       return null;
     } catch (e) {
       return e.toString();

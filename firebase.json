@@ -1,1 +1,28 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"games-review-cb093","appId":"1:902353413586:android:7a834ec31ed99a1dce140b","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"games-review-cb093","configurations":{"android":"1:902353413586:android:7a834ec31ed99a1dce140b","ios":"1:902353413586:ios:f3fa1f5ed85ecf00ce140b","macos":"1:902353413586:ios:f3fa1f5ed85ecf00ce140b","web":"1:902353413586:web:9ca9aec1ceb762adce140b","windows":"1:902353413586:web:7ca178adfb3a6c5ace140b"}}}}}}
+{
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "games-review-cb093",
+          "appId": "1:902353413586:android:7a834ec31ed99a1dce140b",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "games-review-cb093",
+          "configurations": {
+            "android": "1:902353413586:android:7a834ec31ed99a1dce140b",
+            "ios": "1:902353413586:ios:f3fa1f5ed85ecf00ce140b",
+            "macos": "1:902353413586:ios:f3fa1f5ed85ecf00ce140b",
+            "web": "1:902353413586:web:9ca9aec1ceb762adce140b",
+            "windows": "1:902353413586:web:7ca178adfb3a6c5ace140b"
+          }
+        }
+      }
+    }
+  }
+}
