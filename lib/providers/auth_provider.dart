@@ -93,7 +93,9 @@ class AuthProvider extends ChangeNotifier {
       final data = {'displayName': displayName, 'bio': bio};
       if (photoUrl != null) {
         data['photoUrl'] = photoUrl;
-        await _user!.updatePhotoURL(photoUrl);
+        // Do not update Firebase Auth's photoURL directly because it has a tight limit on character length,
+        // which rejects base64 data URIs. We store and retrieve it from Firestore instead.
+        // await _user!.updatePhotoURL(photoUrl);
       }
       // persist to Firestore
       await _db.collection('users').doc(_user!.uid).update(data);

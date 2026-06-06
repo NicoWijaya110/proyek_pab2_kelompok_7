@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/image_utils.dart';
 import '../../models/game_review.dart';
 import '../../models/comment.dart';
 import '../../providers/auth_provider.dart';
@@ -69,7 +69,7 @@ class _DetailScreenState extends State<DetailScreen> {
       parentId: _replyingToId,
       userId: auth.user!.uid,
       userName: auth.user!.displayName ?? 'Anonim',
-      userPhotoUrl: auth.user!.photoURL ?? '',
+      userPhotoUrl: auth.userProfile?['photoUrl'] ?? auth.user!.photoURL ?? '',
       text: text,
       createdAt: DateTime.now(),
     );
@@ -127,11 +127,11 @@ class _DetailScreenState extends State<DetailScreen> {
             expandedHeight: 280,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background: CachedNetworkImage(
-                imageUrl: widget.review.imageUrl,
+              background: ImageUtils.buildImage(
+                widget.review.imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, _) => Container(color: AppColors.darkCard),
-                errorWidget: (_, _, _) => Container(
+                placeholder: Container(color: AppColors.darkCard),
+                errorWidget: Container(
                   color: AppColors.darkCard,
                   child: const Icon(
                     Icons.broken_image_outlined,
@@ -247,8 +247,8 @@ class _DetailScreenState extends State<DetailScreen> {
                       CircleAvatar(
                         radius: 14,
                         backgroundColor: AppColors.darkBorder,
-                        backgroundImage: widget.review.userPhotoUrl.isNotEmpty
-                            ? NetworkImage(widget.review.userPhotoUrl)
+                       backgroundImage: widget.review.userPhotoUrl.isNotEmpty
+                            ? ImageUtils.getImageProvider(widget.review.userPhotoUrl)
                             : null,
                         child: widget.review.userPhotoUrl.isEmpty
                             ? const Icon(
@@ -641,7 +641,7 @@ class _CommentTileState extends State<_CommentTile> {
                 radius: 16,
                 backgroundColor: AppColors.darkBorder,
                 backgroundImage: widget.comment.userPhotoUrl.isNotEmpty
-                    ? NetworkImage(widget.comment.userPhotoUrl)
+                    ? ImageUtils.getImageProvider(widget.comment.userPhotoUrl)
                     : null,
                 child: widget.comment.userPhotoUrl.isEmpty
                     ? const Icon(
@@ -777,7 +777,7 @@ class _CommentTileState extends State<_CommentTile> {
                               radius: 13,
                               backgroundColor: AppColors.darkBorder,
                               backgroundImage: reply.userPhotoUrl.isNotEmpty
-                                  ? NetworkImage(reply.userPhotoUrl)
+                                  ? ImageUtils.getImageProvider(reply.userPhotoUrl)
                                   : null,
                               child: reply.userPhotoUrl.isEmpty
                                   ? const Icon(

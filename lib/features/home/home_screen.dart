@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/image_utils.dart';
 import '../../models/game_review.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -55,17 +55,19 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 if (!auth.isLoggedIn) Navigator.pushNamed(context, '/signin');
               },
-              child: CircleAvatar(
-                radius: 17,
-                backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
-                backgroundImage: (auth.user?.photoURL != null &&
-                        auth.user!.photoURL!.isNotEmpty)
-                    ? NetworkImage(auth.user!.photoURL!)
-                    : null,
-                child: (auth.user?.photoURL == null || auth.user!.photoURL!.isEmpty)
-                    ? Icon(Icons.person_rounded, size: 18, color: colorScheme.primary)
-                    : null,
-              ),
+              child: () {
+                final photoUrl = auth.userProfile?['photoUrl'] ?? auth.user?.photoURL ?? '';
+                return CircleAvatar(
+                  radius: 17,
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+                  backgroundImage: photoUrl.isNotEmpty
+                      ? ImageUtils.getImageProvider(photoUrl)
+                      : null,
+                  child: photoUrl.isEmpty
+                      ? Icon(Icons.person_rounded, size: 18, color: colorScheme.primary)
+                      : null,
+                );
+              }(),
             ),
           ),
         ],
@@ -208,16 +210,16 @@ class _ReviewListCard extends StatelessWidget {
             // Game Cover Image
             ClipRRect(
               borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
-              child: CachedNetworkImage(
-                imageUrl: review.imageUrl,
+              child: ImageUtils.buildImage(
+                review.imageUrl,
                 width: 110,
                 height: 140,
                 fit: BoxFit.cover,
-                placeholder: (_, _) => Container(
+                placeholder: Container(
                   color: AppColors.darkBorder,
                   child: const Icon(Icons.image_outlined, color: Colors.white24),
                 ),
-                errorWidget: (_, _, _) => Container(
+                errorWidget: Container(
                   color: AppColors.darkBorder,
                   child: const Icon(Icons.broken_image_outlined, color: Colors.white24),
                 ),
@@ -331,15 +333,14 @@ class _ReviewGridCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: review.imageUrl,
+                  ImageUtils.buildImage(
+                    review.imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, _) =>
-                        Container(color: AppColors.darkBorder),
-                    errorWidget: (_, _, _) =>
-                        Container(color: AppColors.darkBorder,
-                            child: const Icon(Icons.broken_image_outlined,
-                                color: Colors.white24)),
+                    placeholder: Container(color: AppColors.darkBorder),
+                    errorWidget: Container(
+                      color: AppColors.darkBorder,
+                      child: const Icon(Icons.broken_image_outlined, color: Colors.white24),
+                    ),
                   ),
                   // Genre overlay
                   Positioned(

@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.CAMERA" />
     <application
         android:label="proyek_pab2_kelompok_7"
         android:name="${applicationName}"

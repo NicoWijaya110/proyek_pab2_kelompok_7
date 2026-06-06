@@ -1,10 +1,10 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/image_utils.dart';
 import '../../models/game_review.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -40,8 +40,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isEditing = true);
   }
 
+  bool get _supportsCamera {
+    return kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+  }
+
   Future<void> _showPhotoSourceDialog() async {
-    final canUseCamera = !kIsWeb;
+    final canUseCamera = _supportsCamera;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -268,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         backgroundImage: _newPhotoBytes != null
                           ? MemoryImage(_newPhotoBytes!) as ImageProvider
                           : (photoUrl.isNotEmpty
-                            ? NetworkImage(photoUrl)
+                            ? ImageUtils.getImageProvider(photoUrl)
                             : null),
                           child: (photoUrl.isEmpty && _newPhotoBytes == null)
                             ? const Icon(Icons.person_rounded,
@@ -279,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.45),
+                              color: Colors.black.withValues(alpha: 0.45),
                               borderRadius: BorderRadius.circular(50),
                             ),
                             child: const Center(
@@ -466,12 +472,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            CachedNetworkImage(
-                              imageUrl: r.imageUrl,
+                            ImageUtils.buildImage(
+                              r.imageUrl,
                               fit: BoxFit.cover,
-                              placeholder: (_, _) =>
-                                  Container(color: AppColors.darkBorder),
-                              errorWidget: (_, _, _) => Container(
+                              placeholder: Container(color: AppColors.darkBorder),
+                              errorWidget: Container(
                                 color: AppColors.darkBorder,
                                 child: const Icon(Icons.broken_image_outlined,
                                     color: Colors.white24),

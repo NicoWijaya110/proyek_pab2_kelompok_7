@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -45,6 +45,12 @@ class _PostScreenState extends State<PostScreen> {
     'Other',
   ];
 
+  bool get _supportsCamera {
+    return kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+  }
+
   @override
   void dispose() {
     _titleCtrl.dispose();
@@ -53,7 +59,7 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   Future<void> _showImageSourceDialog() async {
-    final canUseCamera = !kIsWeb;
+    final canUseCamera = _supportsCamera;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -217,7 +223,7 @@ class _PostScreenState extends State<PostScreen> {
         imageUrl: imageUrl,
         userId: auth.user!.uid,
         userName: auth.user!.displayName ?? 'Anonim',
-        userPhotoUrl: auth.user!.photoURL ?? '',
+        userPhotoUrl: auth.userProfile?['photoUrl'] ?? auth.user!.photoURL ?? '',
         createdAt: DateTime.now(),
         latitude: _position?.latitude,
         longitude: _position?.longitude,
@@ -241,7 +247,7 @@ class _PostScreenState extends State<PostScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
       }
     } catch (e) {
       // final fallback error message already shown above where possible
@@ -338,7 +344,7 @@ class _PostScreenState extends State<PostScreen> {
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.45),
+                            color: Colors.black.withValues(alpha: 0.45),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Center(
@@ -349,6 +355,19 @@ class _PostScreenState extends State<PostScreen> {
                         ),
                       ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _showImageSourceDialog,
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Pilih Gambar'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

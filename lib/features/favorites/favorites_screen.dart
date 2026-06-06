@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/image_utils.dart';
 import '../../models/game_review.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/favorite_service.dart';
@@ -123,17 +123,17 @@ class _FavoriteCard extends StatelessWidget {
             ClipRRect(
               borderRadius:
                   const BorderRadius.horizontal(left: Radius.circular(16)),
-              child: CachedNetworkImage(
-                imageUrl: review.imageUrl,
+              child: ImageUtils.buildImage(
+                review.imageUrl,
                 width: 100,
                 height: 130,
                 fit: BoxFit.cover,
-                placeholder: (_, _) =>
-                    Container(color: AppColors.darkBorder),
-                errorWidget: (_, _, _) =>
-                    Container(color: AppColors.darkBorder,
-                        child: const Icon(Icons.broken_image_outlined,
-                            color: Colors.white24)),
+                placeholder: Container(color: AppColors.darkBorder),
+                errorWidget: Container(
+                  color: AppColors.darkBorder,
+                  child: const Icon(Icons.broken_image_outlined,
+                      color: Colors.white24),
+                ),
               ),
             ),
             Expanded(
