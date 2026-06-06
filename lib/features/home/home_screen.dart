@@ -142,12 +142,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
+                Widget content;
                 if (_isGrid) {
-                  return GridView.builder(
+                  content = GridView.builder(
                     padding: const EdgeInsets.all(12),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: MediaQuery.of(ctx).size.width > 1200
+                          ? 5
+                          : MediaQuery.of(ctx).size.width > 900
+                              ? 4
+                              : MediaQuery.of(ctx).size.width > 600
+                                  ? 3
+                                  : 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
                       childAspectRatio: 0.72,
@@ -156,13 +162,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemBuilder: (ctx, i) =>
                         _ReviewGridCard(review: reviews[i]),
                   );
+                } else {
+                  content = ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: reviews.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (ctx, i) => _ReviewListCard(review: reviews[i]),
+                  );
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: reviews.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (ctx, i) => _ReviewListCard(review: reviews[i]),
+                return Expanded(
+                  child: content,
                 );
               },
             ),
@@ -181,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: 5,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (_, _) => Container(
-          height: 140,
+          height: 120,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -212,8 +222,8 @@ class _ReviewListCard extends StatelessWidget {
               borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
               child: ImageUtils.buildImage(
                 review.imageUrl,
-                width: 110,
-                height: 140,
+                width: 95,
+                height: 120,
                 fit: BoxFit.cover,
                 placeholder: Container(
                   color: AppColors.darkBorder,

@@ -447,66 +447,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 }
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 6,
-                    mainAxisSpacing: 6,
-                    childAspectRatio: 0.75,
-                  ),
-                  itemCount: reviews.length,
-                  itemBuilder: (ctx, i) {
-                    final r = reviews[i];
-                    return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => DetailScreen(review: r)),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ImageUtils.buildImage(
-                              r.imageUrl,
-                              fit: BoxFit.cover,
-                              placeholder: Container(color: AppColors.darkBorder),
-                              errorWidget: Container(
-                                color: AppColors.darkBorder,
-                                child: const Icon(Icons.broken_image_outlined,
-                                    color: Colors.white24),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
-                                color: Colors.black.withValues(alpha: 0.65),
-                                child: Text(
-                                  r.title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: MediaQuery.of(ctx).size.width > 1200
+                          ? 6
+                          : MediaQuery.of(ctx).size.width > 900
+                              ? 5
+                              : MediaQuery.of(ctx).size.width > 600
+                                  ? 4
+                                  : 3,
+                      crossAxisSpacing: 6,
+                      mainAxisSpacing: 6,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: reviews.length,
+                    itemBuilder: (ctx, i) {
+                      final r = reviews[i];
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => DetailScreen(review: r)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ImageUtils.buildImage(
+                                r.imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: Container(color: AppColors.darkBorder),
+                                errorWidget: Container(
+                                  color: AppColors.darkBorder,
+                                  child: const Icon(Icons.broken_image_outlined,
+                                      color: Colors.white24),
                                 ),
                               ),
-                            ),
-                          ],
+                               Positioned(
+                                top: 5,
+                                right: 5,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Hapus Review?'),
+                                        content: Text('Apakah kamu yakin ingin menghapus review untuk "${r.title}"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: const Text('Batal'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: const Text(
+                                              'Hapus',
+                                              style: TextStyle(color: Colors.red),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirm == true) {
+                                      try {
+                                        await reviewService.deleteReview(r.id);
+                                        if (ctx.mounted) {
+                                          ScaffoldMessenger.of(ctx).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Review berhasil dihapus ✓'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (ctx.mounted) {
+                                          ScaffoldMessenger.of(ctx).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Gagal menghapus: $e'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.65),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete_rounded,
+                                      color: Colors.redAccent,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(5),
+                                  color: Colors.black.withValues(alpha: 0.65),
+                                  child: Text(
+                                    r.title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
+                      );
+                    },
+                  );
               },
             ),
             const SizedBox(height: 24),
