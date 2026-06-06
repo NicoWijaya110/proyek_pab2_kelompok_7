@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'Belum ada review\nJadi yang pertama!',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                          style: TextStyle(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.4)),
                         ),
                       ],
                     ),
@@ -209,6 +209,7 @@ class _ReviewListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -264,11 +265,11 @@ class _ReviewListCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       review.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Orbitron',
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -289,24 +290,24 @@ class _ReviewListCard extends StatelessWidget {
                       review.reviewText,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: Colors.white54),
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.person_outline_rounded,
-                            size: 12, color: Colors.white38),
+                        Icon(Icons.person_outline_rounded,
+                            size: 12, color: isDark ? Colors.white38 : Colors.black38),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             review.userName,
-                            style: const TextStyle(fontSize: 11, color: Colors.white38),
+                            style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black45),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
                           timeago.format(review.createdAt, locale: 'id'),
-                          style: const TextStyle(fontSize: 10, color: Colors.white24),
+                          style: TextStyle(fontSize: 10, color: isDark ? Colors.white24 : Colors.black38),
                         ),
                       ],
                     ),
@@ -328,6 +329,7 @@ class _ReviewGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -405,11 +407,11 @@ class _ReviewGridCard extends StatelessWidget {
                 children: [
                   Text(
                     review.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Orbitron',
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -417,13 +419,13 @@ class _ReviewGridCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.person_outline_rounded,
-                          size: 11, color: Colors.white38),
+                      Icon(Icons.person_outline_rounded,
+                          size: 11, color: isDark ? Colors.white38 : Colors.black38),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           review.userName,
-                          style: const TextStyle(fontSize: 11, color: Colors.white38),
+                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black45),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

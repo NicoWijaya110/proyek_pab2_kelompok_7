@@ -9,6 +9,7 @@ import '../../core/utils/image_utils.dart';
 import '../../models/game_review.dart';
 import '../../models/comment.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../services/comment_service.dart';
 import '../../services/favorite_service.dart';
 
@@ -117,6 +118,7 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final isDark = context.watch<ThemeProvider>().isDark;
 
     return Scaffold(
       body: CustomScrollView(
@@ -211,17 +213,17 @@ class _DetailScreenState extends State<DetailScreen> {
                         ),
                       ),
                       const Spacer(),
-                      const Icon(
+                      Icon(
                         Icons.access_time_rounded,
                         size: 13,
-                        color: Colors.white38,
+                        color: isDark ? Colors.white38 : Colors.black38,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         timeago.format(widget.review.createdAt, locale: 'id'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white38,
+                          color: isDark ? Colors.white38 : Colors.black45,
                         ),
                       ),
                     ],
@@ -231,11 +233,11 @@ class _DetailScreenState extends State<DetailScreen> {
                   // Judul Game
                   Text(
                     widget.review.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Orbitron',
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                       height: 1.3,
                     ),
                   ),
@@ -251,19 +253,19 @@ class _DetailScreenState extends State<DetailScreen> {
                             ? ImageUtils.getImageProvider(widget.review.userPhotoUrl)
                             : null,
                         child: widget.review.userPhotoUrl.isEmpty
-                            ? const Icon(
+                            ? Icon(
                                 Icons.person_rounded,
                                 size: 14,
-                                color: Colors.white38,
+                                color: isDark ? Colors.white38 : Colors.black38,
                               )
                             : null,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         widget.review.userName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white70,
+                          color: isDark ? Colors.white70 : Colors.black87,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -304,8 +306,8 @@ class _DetailScreenState extends State<DetailScreen> {
                   // Review Text
                   Text(
                     widget.review.reviewText,
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black87,
                       fontSize: 15,
                       height: 1.7,
                     ),
@@ -319,9 +321,9 @@ class _DetailScreenState extends State<DetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.darkCard,
+                          color: isDark ? AppColors.darkCard : AppColors.lightCard,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.darkBorder),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey.shade300),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -341,16 +343,16 @@ class _DetailScreenState extends State<DetailScreen> {
                                       Text(
                                         widget.review.locationName ??
                                             'Lokasi tercatat',
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : Colors.black,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       Text(
                                         '${widget.review.latitude!.toStringAsFixed(6)}, '
                                         '${widget.review.longitude!.toStringAsFixed(6)}',
-                                        style: const TextStyle(
-                                          color: Colors.white38,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white38 : Colors.black45,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -410,11 +412,11 @@ class _DetailScreenState extends State<DetailScreen> {
                   // ── Section Komentar ─────────────────────────────
                   Text(
                     'Komentar (${widget.review.commentsCount})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Orbitron',
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -512,8 +514,8 @@ class _DetailScreenState extends State<DetailScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom + 12,
         ),
         decoration: BoxDecoration(
-          color: AppColors.darkSurface,
-          border: Border(top: BorderSide(color: AppColors.darkBorder)),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          border: Border(top: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey.shade300)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -571,7 +573,7 @@ class _DetailScreenState extends State<DetailScreen> {
                     controller: _replyingToId != null
                         ? _replyCtrl
                         : _commentCtrl,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       hintText: _replyingToId != null
                           ? 'Tulis balasan...'
@@ -627,6 +629,7 @@ class _CommentTileState extends State<_CommentTile> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
     final isOwner = widget.comment.userId == widget.currentUserId;
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -639,15 +642,15 @@ class _CommentTileState extends State<_CommentTile> {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.darkBorder,
+                backgroundColor: isDark ? AppColors.darkBorder : Colors.grey.shade300,
                 backgroundImage: widget.comment.userPhotoUrl.isNotEmpty
                     ? ImageUtils.getImageProvider(widget.comment.userPhotoUrl)
                     : null,
                 child: widget.comment.userPhotoUrl.isEmpty
-                    ? const Icon(
+                    ? Icon(
                         Icons.person_rounded,
                         size: 14,
-                        color: Colors.white38,
+                        color: isDark ? Colors.white38 : Colors.black38,
                       )
                     : null,
               ),
@@ -656,9 +659,9 @@ class _CommentTileState extends State<_CommentTile> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.darkCard,
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.darkBorder),
+                    border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey.shade300),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -679,9 +682,9 @@ class _CommentTileState extends State<_CommentTile> {
                               widget.comment.createdAt,
                               locale: 'id',
                             ),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white38,
+                              color: isDark ? Colors.white38 : Colors.black45,
                             ),
                           ),
                         ],
@@ -689,8 +692,8 @@ class _CommentTileState extends State<_CommentTile> {
                       const SizedBox(height: 4),
                       Text(
                         widget.comment.text,
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
                           fontSize: 13,
                           height: 1.5,
                         ),
@@ -775,15 +778,15 @@ class _CommentTileState extends State<_CommentTile> {
                           children: [
                             CircleAvatar(
                               radius: 13,
-                              backgroundColor: AppColors.darkBorder,
+                              backgroundColor: isDark ? AppColors.darkBorder : Colors.grey.shade300,
                               backgroundImage: reply.userPhotoUrl.isNotEmpty
                                   ? ImageUtils.getImageProvider(reply.userPhotoUrl)
                                   : null,
                               child: reply.userPhotoUrl.isEmpty
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.person_rounded,
                                       size: 12,
-                                      color: Colors.white38,
+                                      color: isDark ? Colors.white38 : Colors.black38,
                                     )
                                   : null,
                             ),
@@ -792,10 +795,10 @@ class _CommentTileState extends State<_CommentTile> {
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: AppColors.darkCard,
+                                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: AppColors.darkBorder,
+                                    color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
                                   ),
                                 ),
                                 child: Column(
@@ -817,9 +820,9 @@ class _CommentTileState extends State<_CommentTile> {
                                             reply.createdAt,
                                             locale: 'id',
                                           ),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 10,
-                                            color: Colors.white38,
+                                            color: isDark ? Colors.white38 : Colors.black45,
                                           ),
                                         ),
                                       ],
@@ -827,8 +830,8 @@ class _CommentTileState extends State<_CommentTile> {
                                     const SizedBox(height: 3),
                                     Text(
                                       reply.text,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white70 : Colors.black87,
                                         fontSize: 12,
                                         height: 1.4,
                                       ),

@@ -171,8 +171,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   size: 64,
                   color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
               const SizedBox(height: 16),
-              const Text('Masuk untuk melihat profilmu',
-                  style: TextStyle(color: Colors.white54)),
+              Text('Masuk untuk melihat profilmu',
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () => Navigator.pushNamed(context, '/signin'),
@@ -261,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       : [Colors.blue.shade50, Colors.white],
                 ),
                 border: Border(
-                    bottom: BorderSide(color: AppColors.darkBorder)),
+                    bottom: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey.shade300)),
               ),
               child: Column(
                 children: [
@@ -320,23 +320,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Tampilan info (non-edit mode)
                     Text(
                       displayName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Orbitron',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(email,
-                        style: const TextStyle(color: Colors.white38, fontSize: 13)),
+                        style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 13)),
                     if (bio.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
                         bio,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            color: Colors.white60, fontSize: 13, height: 1.5),
+                        style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.black87, fontSize: 13, height: 1.5),
                       ),
                     ],
                     const SizedBox(height: 16),
@@ -353,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Form edit profil
                     TextFormField(
                       controller: _nameCtrl,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
                       textAlign: TextAlign.center,
                       decoration: const InputDecoration(
                         labelText: 'Nama Lengkap',
@@ -363,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _bioCtrl,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
                       maxLines: 3,
                       maxLength: 150,
                       decoration: const InputDecoration(
@@ -411,13 +411,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'Posting Saya',
                     style: TextStyle(
                       fontFamily: 'Orbitron',
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -441,7 +441,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Text(
                         'Kamu belum pernah memposting review.\nMulai sekarang!',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
+                        style: TextStyle(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.35)),
                       ),
                     ),
                   );

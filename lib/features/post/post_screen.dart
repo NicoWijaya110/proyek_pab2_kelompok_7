@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/game_review.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../services/review_service.dart';
 import '../../services/storage_service.dart';
 
@@ -259,6 +260,7 @@ class _PostScreenState extends State<PostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Review Baru'),
@@ -298,12 +300,12 @@ class _PostScreenState extends State<PostScreen> {
                       width: double.infinity,
                       height: 220,
                       decoration: BoxDecoration(
-                        color: AppColors.darkCard,
+                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: _imageBytes != null
-                              ? AppColors.primary
-                              : AppColors.darkBorder,
+                              ? Theme.of(context).colorScheme.primary
+                              : (isDark ? AppColors.darkBorder : Colors.grey.shade300),
                           width: 1.5,
                           style: BorderStyle.solid,
                         ),
@@ -319,13 +321,13 @@ class _PostScreenState extends State<PostScreen> {
                                 Icon(
                                   Icons.add_photo_alternate_outlined,
                                   size: 48,
-                                  color: AppColors.primary.withValues(alpha: 0.6),
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
+                                Text(
                                   'Tambahkan Cover Game',
                                   style: TextStyle(
-                                    color: AppColors.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -333,7 +335,7 @@ class _PostScreenState extends State<PostScreen> {
                                 Text(
                                   'Pilih dari galeri atau kamera',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.3),
+                                    color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.4),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -365,19 +367,19 @@ class _PostScreenState extends State<PostScreen> {
                   icon: const Icon(Icons.photo_library),
                   label: const Text('Pilih Gambar'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    side: BorderSide(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
               // ── Genre Chips ──────────────────────────────────────
-              const Text(
+              Text(
                 'Genre',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white70,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
@@ -401,7 +403,7 @@ class _PostScreenState extends State<PostScreen> {
                     labelStyle: TextStyle(
                       color: selected
                           ? AppColors.genreColor(g)
-                          : Colors.white60,
+                          : (isDark ? Colors.white60 : Colors.black54),
                       fontWeight: selected
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -412,11 +414,11 @@ class _PostScreenState extends State<PostScreen> {
               const SizedBox(height: 20),
 
               // ── Star Rating ──────────────────────────────────────
-              const Text(
+              Text(
                 'Rating',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white70,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
@@ -453,7 +455,7 @@ class _PostScreenState extends State<PostScreen> {
               // ── Game Title ───────────────────────────────────────
               TextFormField(
                 controller: _titleCtrl,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'Judul Game',
                   prefixIcon: Icon(Icons.gamepad_rounded),
@@ -467,7 +469,7 @@ class _PostScreenState extends State<PostScreen> {
               // ── Review Text ──────────────────────────────────────
               TextFormField(
                 controller: _reviewCtrl,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 maxLines: 6,
                 decoration: const InputDecoration(
                   labelText: 'Tulis reviewmu di sini...',
@@ -484,11 +486,11 @@ class _PostScreenState extends State<PostScreen> {
               const SizedBox(height: 20),
 
               // ── Lokasi GPS ───────────────────────────────────────
-              const Text(
+              Text(
                 'Lokasi',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white70,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
@@ -498,12 +500,12 @@ class _PostScreenState extends State<PostScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.darkCard,
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _position != null
-                          ? AppColors.primary
-                          : AppColors.darkBorder,
+                          ? Theme.of(context).colorScheme.primary
+                          : (isDark ? AppColors.darkBorder : Colors.grey.shade300),
                     ),
                   ),
                   child: Column(
@@ -516,15 +518,15 @@ class _PostScreenState extends State<PostScreen> {
                                 ? Icons.location_on_rounded
                                 : Icons.my_location_rounded,
                             color: _position != null
-                                ? AppColors.primary
-                                : Colors.white38,
+                                ? Theme.of(context).colorScheme.primary
+                                : (isDark ? Colors.white38 : Colors.black38),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: _gettingLocation
-                                ? const Text(
+                                ? Text(
                                     'Mendapatkan lokasi...',
-                                    style: TextStyle(color: AppColors.primary),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
                                   )
                                 : Text(
                                     _position != null
@@ -534,8 +536,8 @@ class _PostScreenState extends State<PostScreen> {
                                         : 'Dapatkan lokasi GPS saat ini',
                                     style: TextStyle(
                                       color: _position != null
-                                          ? Colors.white
-                                          : Colors.white38,
+                                          ? (isDark ? Colors.white : Colors.black)
+                                          : (isDark ? Colors.white38 : Colors.black38),
                                       height: 1.5,
                                     ),
                                   ),
