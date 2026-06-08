@@ -9,14 +9,17 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/image_utils.dart';
 import '../../models/game_review.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/notification_service.dart';
 import '../../services/review_service.dart';
 import '../../services/storage_service.dart';
 
 class PostScreen extends StatefulWidget {
-  const PostScreen({super.key});
+  final GameReview? reviewToEdit;
+  const PostScreen({super.key, this.reviewToEdit});
 
   @override
   State<PostScreen> createState() => _PostScreenState();
@@ -29,11 +32,13 @@ class _PostScreenState extends State<PostScreen> {
 
   Uint8List? _imageBytes;
   bool _pickingImage = false;
-  String _selectedGenre = 'Action';
+  Set<String> _selectedGenres = {'Action'};
   double _rating = 4.0;
   bool _submitting = false;
   bool _gettingLocation = false;
   Position? _position;
+  double? _latitude;
+  double? _longitude;
   String? _locationName;
 
   final List<String> _genres = [
@@ -50,6 +55,21 @@ class _PostScreenState extends State<PostScreen> {
     return kIsWeb ||
         defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.reviewToEdit != null) {
+      final r = widget.reviewToEdit!;
+      _titleCtrl.text = r.title;
+      _reviewCtrl.text = r.reviewText;
+      _selectedGenres = r.genre.split(', ').map((g) => g.trim()).toSet();
+      _rating = r.rating;
+      _locationName = r.locationName;
+      _latitude = r.latitude;
+      _longitude = r.longitude;
+    }
   }
 
   @override
@@ -120,8 +140,8 @@ class _PostScreenState extends State<PostScreen> {
 
   // removed unused static map helper
 
-  Future<void> _openMapExternal(Position position) async {
-    final mapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}');
+  Future<void> _openMapExternal(double latitude, double longitude) async {
+    final mapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
     if (await canLaunchUrl(mapsUrl)) {
       await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
     } else {
@@ -166,6 +186,8 @@ class _PostScreenState extends State<PostScreen> {
 
       setState(() {
         _position = position;
+        _latitude = position.latitude;
+        _longitude = position.longitude;
         _locationName = name?.isNotEmpty == true
             ? name
             : '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
@@ -183,7 +205,7 @@ class _PostScreenState extends State<PostScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-      if (_imageBytes == null) {
+    if (_imageBytes == null && (widget.reviewToEdit == null || widget.reviewToEdit!.imageUrl.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih gambar cover game terlebih dahulu'),
@@ -198,61 +220,105 @@ class _PostScreenState extends State<PostScreen> {
     try {
       if (auth.user == null) throw Exception('Belum login. Silakan masuk terlebih dahulu.');
 
-      // Upload image to Firebase Storage
-      print('DEBUG: starting image upload (${_imageBytes!.lengthInBytes} bytes)');
-      String imageUrl;
-      try {
-        imageUrl = await StorageService().uploadReviewImage(
-          bytes: _imageBytes!,
+      String imageUrl = widget.reviewToEdit?.imageUrl ?? '';
+      if (_imageBytes != null) {
+        // Upload image to Firebase Storage
+        print('DEBUG: starting image upload (${_imageBytes!.lengthInBytes} bytes)');
+        try {
+          imageUrl = await StorageService().uploadReviewImage(
+            bytes: _imageBytes!,
+            userId: auth.user!.uid,
+          );
+          print('DEBUG: upload finished, url=$imageUrl');
+        } catch (e) {
+          print('DEBUG: upload failed: $e');
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal upload gambar: $e')));
+          rethrow;
+        }
+      }
+
+      if (widget.reviewToEdit != null) {
+        // Edit flow
+        final updatedData = {
+          'title': _titleCtrl.text.trim(),
+          'reviewText': _reviewCtrl.text.trim(),
+          'genre': _selectedGenres.join(', '),
+          'rating': _rating,
+          'imageUrl': imageUrl,
+          'latitude': _latitude,
+          'longitude': _longitude,
+          'locationName': _locationName,
+        };
+
+        try {
+          print('DEBUG: updating review in firestore');
+          await ReviewService().updateReview(widget.reviewToEdit!.id, updatedData);
+          print('DEBUG: review updated');
+        } catch (e) {
+          print('DEBUG: update failed: $e');
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui review: $e')));
+          rethrow;
+        }
+
+        NotificationService.showNotification(
+          'Review Diperbarui! 🎮',
+          'Review Anda untuk "${_titleCtrl.text.trim()}" telah berhasil diperbarui.',
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Review berhasil diperbarui! 🎮'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        // Create flow
+        final review = GameReview(
+          id: '',
+          title: _titleCtrl.text.trim(),
+          reviewText: _reviewCtrl.text.trim(),
+          genre: _selectedGenres.join(', '),
+          rating: _rating,
+          imageUrl: imageUrl,
           userId: auth.user!.uid,
+          userName: auth.user!.displayName ?? 'Anonim',
+          userPhotoUrl: auth.userProfile?['photoUrl'] ?? auth.user!.photoURL ?? '',
+          createdAt: DateTime.now(),
+          latitude: _latitude,
+          longitude: _longitude,
+          locationName: _locationName,
         );
-        print('DEBUG: upload finished, url=$imageUrl');
-      } catch (e) {
-        print('DEBUG: upload failed: $e');
-        // show detailed error and stop
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal upload gambar: $e')));
-        rethrow;
-      }
 
-      // Prepare review and save to Firestore
-      final review = GameReview(
-        id: '',
-        title: _titleCtrl.text.trim(),
-        reviewText: _reviewCtrl.text.trim(),
-        genre: _selectedGenre,
-        rating: _rating,
-        imageUrl: imageUrl,
-        userId: auth.user!.uid,
-        userName: auth.user!.displayName ?? 'Anonim',
-        userPhotoUrl: auth.userProfile?['photoUrl'] ?? auth.user!.photoURL ?? '',
-        createdAt: DateTime.now(),
-        latitude: _position?.latitude,
-        longitude: _position?.longitude,
-        locationName: _locationName,
-      );
+        try {
+          print('DEBUG: saving review to firestore');
+          await ReviewService().addReview(review);
+          print('DEBUG: review saved');
+        } catch (e) {
+          print('DEBUG: save failed: $e');
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan review: $e')));
+          rethrow;
+        }
 
-      try {
-        print('DEBUG: saving review to firestore');
-        await ReviewService().addReview(review);
-        print('DEBUG: review saved');
-      } catch (e) {
-        print('DEBUG: save failed: $e');
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan review: $e')));
-        rethrow;
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Review berhasil diposting! 🎮'),
-            backgroundColor: Colors.green,
-          ),
+        NotificationService.showNotification(
+          'Review Terkirim! 🎮',
+          'Review Anda untuk "${_titleCtrl.text.trim()}" telah berhasil diposting.',
         );
-        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Review berhasil diposting! 🎮'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+        }
       }
     } catch (e) {
-      // final fallback error message already shown above where possible
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal posting: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -263,7 +329,7 @@ class _PostScreenState extends State<PostScreen> {
     final isDark = context.watch<ThemeProvider>().isDark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Review Baru'),
+        title: Text(widget.reviewToEdit != null ? 'Edit Review' : 'Review Baru'),
         actions: [
           TextButton(
             onPressed: _submitting ? null : _submit,
@@ -315,32 +381,40 @@ class _PostScreenState extends State<PostScreen> {
                               borderRadius: BorderRadius.circular(15),
                               child: Image.memory(_imageBytes!, fit: BoxFit.cover),
                             )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  size: 48,
-                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tambahkan Cover Game',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
+                          : (widget.reviewToEdit != null && widget.reviewToEdit!.imageUrl.isNotEmpty)
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: ImageUtils.buildImage(
+                                    widget.reviewToEdit!.imageUrl,
+                                    fit: BoxFit.cover,
                                   ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_photo_alternate_outlined,
+                                      size: 48,
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Tambahkan Cover Game',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Pilih dari galeri atau kamera',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.4),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Pilih dari galeri atau kamera',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.4),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
                     ),
                     if (_pickingImage)
                       Positioned.fill(
@@ -387,11 +461,28 @@ class _PostScreenState extends State<PostScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: _genres.map((g) {
-                  final selected = _selectedGenre == g;
+                  final selected = _selectedGenres.contains(g);
                   return ChoiceChip(
                     label: Text(g),
                     selected: selected,
-                    onSelected: (_) => setState(() => _selectedGenre = g),
+                    onSelected: (val) {
+                      setState(() {
+                        if (val) {
+                          _selectedGenres.add(g);
+                        } else {
+                          if (_selectedGenres.length > 1) {
+                            _selectedGenres.remove(g);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Pilih minimal satu genre 🎮'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        }
+                      });
+                    },
                     selectedColor: AppColors.genreColor(
                       g,
                     ).withValues(alpha: 0.3),
@@ -503,7 +594,7 @@ class _PostScreenState extends State<PostScreen> {
                     color: isDark ? AppColors.darkCard : AppColors.lightCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _position != null
+                      color: _latitude != null && _longitude != null
                           ? Theme.of(context).colorScheme.primary
                           : (isDark ? AppColors.darkBorder : Colors.grey.shade300),
                     ),
@@ -514,10 +605,10 @@ class _PostScreenState extends State<PostScreen> {
                       Row(
                         children: [
                           Icon(
-                            _position != null
+                            _latitude != null && _longitude != null
                                 ? Icons.location_on_rounded
                                 : Icons.my_location_rounded,
-                            color: _position != null
+                            color: _latitude != null && _longitude != null
                                 ? Theme.of(context).colorScheme.primary
                                 : (isDark ? Colors.white38 : Colors.black38),
                           ),
@@ -529,13 +620,13 @@ class _PostScreenState extends State<PostScreen> {
                                     style: TextStyle(color: Theme.of(context).colorScheme.primary),
                                   )
                                 : Text(
-                                    _position != null
+                                    _latitude != null && _longitude != null
                                         ? '${_locationName ?? 'Lokasi ditemukan'}\n'
-                                              '${_position!.latitude.toStringAsFixed(6)}, '
-                                              '${_position!.longitude.toStringAsFixed(6)}'
+                                              '${_latitude!.toStringAsFixed(6)}, '
+                                              '${_longitude!.toStringAsFixed(6)}'
                                         : 'Dapatkan lokasi GPS saat ini',
                                     style: TextStyle(
-                                      color: _position != null
+                                      color: _latitude != null && _longitude != null
                                           ? (isDark ? Colors.white : Colors.black)
                                           : (isDark ? Colors.white38 : Colors.black38),
                                       height: 1.5,
@@ -553,17 +644,17 @@ class _PostScreenState extends State<PostScreen> {
                             ),
                         ],
                       ),
-                      if (_position != null) ...[
+                      if (_latitude != null && _longitude != null) ...[
                         const SizedBox(height: 14),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: GestureDetector(
-                            onTap: () => _openMapExternal(_position!),
+                            onTap: () => _openMapExternal(_latitude!, _longitude!),
                             child: SizedBox(
                               height: 180,
                               child: FlutterMap(
                                 options: MapOptions(
-                                  center: LatLng(_position!.latitude, _position!.longitude),
+                                  center: LatLng(_latitude!, _longitude!),
                                   zoom: 15,
                                   interactiveFlags: InteractiveFlag.all,
                                 ),
@@ -575,7 +666,7 @@ class _PostScreenState extends State<PostScreen> {
                                   MarkerLayer(
                                     markers: [
                                       Marker(
-                                        point: LatLng(_position!.latitude, _position!.longitude),
+                                        point: LatLng(_latitude!, _longitude!),
                                         width: 36,
                                         height: 36,
                                         builder: (ctx) => const Icon(Icons.location_on_rounded, color: Colors.redAccent, size: 36),

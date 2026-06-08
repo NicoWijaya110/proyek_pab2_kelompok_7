@@ -44,7 +44,8 @@ class AppColors {
   };
 
   static Color genreColor(String genre) {
-    return _genreColors[genre] ?? primary;
+    final firstGenre = genre.split(',').first.trim();
+    return _genreColors[firstGenre] ?? primary;
   }
 }
 

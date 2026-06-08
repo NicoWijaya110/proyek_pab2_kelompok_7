@@ -11,6 +11,7 @@ import '../../providers/theme_provider.dart';
 import '../../services/review_service.dart';
 import '../../services/storage_service.dart';
 import '../detail/detail_screen.dart';
+import '../post/post_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -485,6 +486,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: AppColors.darkBorder,
                                   child: const Icon(Icons.broken_image_outlined,
                                       color: Colors.white24),
+                                ),
+                              ),
+                              Positioned(
+                                top: 5,
+                                right: 35,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PostScreen(reviewToEdit: r),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.65),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit_rounded,
+                                      color: AppColors.primary,
+                                      size: 16,
+                                    ),
+                                  ),
                                 ),
                               ),
                                Positioned(

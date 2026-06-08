@@ -6,13 +6,15 @@ class ReviewService {
 
   // Stream semua review, urut terbaru (diurutkan in-memory untuk menghindari composite index error)
   Stream<List<GameReview>> streamReviews({String? genre}) {
-    Query q = _col;
-    if (genre != null && genre != 'Semua') {
-      q = q.where('genre', isEqualTo: genre);
-    }
-    return q.snapshots().map(
+    return _col.snapshots().map(
       (snap) {
-        final list = snap.docs.map((d) => GameReview.fromFirestore(d)).toList();
+        var list = snap.docs.map((d) => GameReview.fromFirestore(d)).toList();
+        if (genre != null && genre != 'Semua') {
+          list = list.where((r) {
+            final genres = r.genre.split(',').map((g) => g.trim().toLowerCase());
+            return genres.contains(genre.toLowerCase());
+          }).toList();
+        }
         list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         return list;
       },
@@ -40,6 +42,11 @@ class ReviewService {
   // Hapus review
   Future<void> deleteReview(String reviewId) async {
     await _col.doc(reviewId).delete();
+  }
+
+  // Edit review
+  Future<void> updateReview(String reviewId, Map<String, dynamic> data) async {
+    await _col.doc(reviewId).update(data);
   }
 
   // Toggle like
